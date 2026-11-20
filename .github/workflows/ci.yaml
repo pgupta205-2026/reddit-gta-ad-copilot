@@ -71,21 +71,42 @@ jobs:
           terraform validate
 
   adk-live-eval:
-    name: ADK Golden Behavioral Evaluation (Optional when API key configured)
+    name: ADK Golden Behavioral Evaluation (Optional)
     runs-on: ubuntu-latest
     needs: [lint-typecheck-test]
-    if: ${{ secrets.GOOGLE_API_KEY != '' }}
     steps:
+      - name: Check if GOOGLE_API_KEY secret is configured
+        id: check-secret
+        env:
+          GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+        run: |
+          if [ -n "$GOOGLE_API_KEY" ]; then
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+            echo "Skipping live ADK eval (GOOGLE_API_KEY secret not set; offline golden evals already passed)."
+          fi
+
       - name: Checkout repository
+        if: steps.check-secret.outputs.configured == 'true'
         uses: actions/checkout@v4
 
       - name: Install uv
+        if: steps.check-secret.outputs.configured == 'true'
         uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Set up Python 3.12
+        if: steps.check-secret.outputs.configured == 'true'
+        run: uv python install 3.12
 
       - name: Install dependencies
+        if: steps.check-secret.outputs.configured == 'true'
         run: uv sync --extra dev
 
       - name: Run ADK Golden Evalset
+        if: steps.check-secret.outputs.configured == 'true'
         env:
           GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
           GOOGLE_GENAI_USE_VERTEXAI: "False"
