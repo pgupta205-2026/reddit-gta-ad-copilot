@@ -143,15 +143,14 @@ class ObservabilityIntentOutcomePlugin(BasePlugin):
         )
         return None
 
-    async def on_tool_error_callback(
+    async def on_tool_error_callback(  # type: ignore[override]
         self,
         *,
         tool: Any,
-        tool_args: dict[str, Any] | None = None,  # noqa: ARG002
-        tool_context: Any = None,
-        error: Exception | None = None,
-        **_kwargs: Any,
-    ) -> None:
+        tool_args: dict[str, Any],  # noqa: ARG002
+        tool_context: Any,
+        error: Exception,
+    ) -> dict[str, Any] | None:
         """Record structured failure outcome if an unexpected tool exception occurs."""
         tool_name = getattr(tool, "name", str(tool))
         key = self._tool_tracking_key(tool_name, tool_context)

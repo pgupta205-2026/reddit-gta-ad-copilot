@@ -6,8 +6,9 @@ execution, tool calls, PII redaction, and async memory consolidation.
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from contextlib import contextmanager
-from typing import Any, Iterator
+from typing import Any
 
 from app.observability.logging import get_logger
 

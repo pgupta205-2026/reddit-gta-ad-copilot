@@ -12,7 +12,8 @@ import json
 import logging
 import os
 import sys
-from datetime import datetime, timezone
+from collections.abc import MutableMapping
+from datetime import UTC, datetime
 from typing import Any
 
 from app.security.pii_redactor import PiiRedactor
@@ -56,10 +57,10 @@ def _get_active_trace_fields() -> dict[str, str]:
 
 
 def _scrub_event_dict(
-    _logger: Any, _method_name: str, event_dict: dict[str, Any]
-) -> dict[str, Any]:
+    _logger: Any, _method_name: str, event_dict: MutableMapping[str, Any]
+) -> MutableMapping[str, Any]:
     """Structlog processor that redacts PII and attaches trace metadata."""
-    scrubbed = _SHARED_REDACTOR.redact_value(event_dict)
+    scrubbed: dict[str, Any] = dict(_SHARED_REDACTOR.redact_value(dict(event_dict)))
     scrubbed.update(_get_active_trace_fields())
     if "level" in scrubbed and "severity" not in scrubbed:
         scrubbed["severity"] = str(scrubbed["level"]).upper()
@@ -71,7 +72,7 @@ class _JsonLogFormatter(logging.Formatter):
 
     def format(self, record: logging.LogRecord) -> str:
         payload: dict[str, Any] = {
-            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
             "severity": record.levelname,
             "logger": record.name,
             "event": _SHARED_REDACTOR.redact_text(record.getMessage()),

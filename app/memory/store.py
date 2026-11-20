@@ -18,7 +18,7 @@ import sqlite3
 import uuid
 from collections import Counter
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -164,7 +164,7 @@ class CampaignMemoryStore:
         assert self.redactor is not None
         redaction = self.redactor.redact_with_report(summary)
         snapshot_id = f"snap_{uuid.uuid4().hex[:12]}"
-        recorded_at = datetime.now(timezone.utc).isoformat()
+        recorded_at = datetime.now(UTC).isoformat()
 
         with self._conn:
             self._conn.execute(

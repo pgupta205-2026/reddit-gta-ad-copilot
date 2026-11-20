@@ -10,12 +10,12 @@ from __future__ import annotations
 
 import os
 from dataclasses import dataclass, field
-from enum import Enum
+from enum import StrEnum
 
 from app.security.secrets import SecretManagerProvider
 
 
-class TaskTier(str, Enum):
+class TaskTier(StrEnum):
     """Cognitive complexity tiers governing strategic model routing."""
 
     FAST_EXTRACTION = "fast_extraction"

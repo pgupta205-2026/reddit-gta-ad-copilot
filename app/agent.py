@@ -20,7 +20,8 @@ Architecture:
 
 from __future__ import annotations
 
-from typing import Any, AsyncGenerator
+from collections.abc import AsyncGenerator
+from typing import Any
 
 from google.adk.agents import Agent, BaseAgent, LoopAgent, ParallelAgent, SequentialAgent
 from google.adk.agents.callback_context import CallbackContext
