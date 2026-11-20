@@ -1,0 +1,96 @@
+name: AgentOps CI & Regression Suite
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  lint-typecheck-test:
+    name: Lint, Typecheck, Unit Tests & Offline Evals
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Set up Python 3.12
+        run: uv python install 3.12
+
+      - name: Install dependencies
+        run: uv sync --extra dev
+
+      - name: Ruff lint and formatting check
+        run: |
+          uv run ruff check app tests
+          uv run ruff format --check app tests
+
+      - name: Mypy static type check
+        run: uv run mypy app
+
+      - name: Run unit and integration test suites
+        run: uv run pytest tests/unit tests/integration --cov=app --cov-report=term-missing
+
+      - name: Run offline golden regression evaluator
+        run: uv run python tests/eval/run_offline_eval.py
+
+  terraform-validate:
+    name: Terraform Format & Validate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.9.8"
+
+      - name: Terraform format check
+        run: terraform fmt -check -recursive deployment/terraform
+
+      - name: Validate single-project module
+        working-directory: deployment/terraform/single-project
+        run: |
+          terraform init -backend=false
+          terraform validate
+
+      - name: Validate CI/CD WIF module
+        working-directory: deployment/terraform/cicd
+        run: |
+          terraform init -backend=false
+          terraform validate
+
+  adk-live-eval:
+    name: ADK Golden Behavioral Evaluation (Optional when API key configured)
+    runs-on: ubuntu-latest
+    needs: [lint-typecheck-test]
+    if: ${{ secrets.GOOGLE_API_KEY != '' }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: Install dependencies
+        run: uv sync --extra dev
+
+      - name: Run ADK Golden Evalset
+        env:
+          GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+          GOOGLE_GENAI_USE_VERTEXAI: "False"
+          REDDIT_DATA_MODE: "fixture"
+        run: |
+          uv run adk eval ./app tests/eval/evalsets/golden_advertiser_copilot.evalset.json \
+            --config_file_path=tests/eval/eval_config.json \
+            --print_detailed_results

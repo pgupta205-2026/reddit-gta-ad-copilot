@@ -1,0 +1,75 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "reddit-gta-ad-copilot"
+version = "0.1.0"
+description = "Production multi-agent Google ADK copilot for Reddit gaming advertiser opportunities and GARM brand-safety monitoring during GTA VI launch week."
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "Apache-2.0" }
+dependencies = [
+    "google-adk[db]>=1.18.0",
+    "google-genai>=1.40.0",
+    "pydantic>=2.9.0",
+    "pydantic-settings>=2.6.0",
+    "fastapi>=0.115.0",
+    "uvicorn[standard]>=0.32.0",
+    "httpx>=0.27.0",
+    "structlog>=24.4.0",
+    "opentelemetry-api>=1.28.0",
+    "opentelemetry-sdk>=1.28.0",
+    "opentelemetry-exporter-gcp-trace>=1.9.0",
+    "google-cloud-dlp>=3.25.0",
+    "google-cloud-secret-manager>=2.21.0",
+    "google-cloud-logging>=3.11.0",
+    "google-cloud-aiplatform>=1.74.0",
+    "sqlalchemy>=2.0.35",
+    "aiosqlite>=0.20.0",
+    "psycopg[binary]>=3.2.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.3.0",
+    "pytest-asyncio>=0.24.0",
+    "pytest-cov>=6.0.0",
+    "ruff>=0.7.0",
+    "mypy>=1.13.0",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["app"]
+
+[tool.agents-cli]
+name = "reddit-gta-ad-copilot"
+agent_template = "adk"
+agent_directory = "app"
+deployment_target = "cloud_run"
+session_type = "cloud_sql"
+cicd_runner = "github_actions"
+region = "us-central1"
+guidance_filename = "GEMINI.md"
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM", "T20"]
+ignore = ["E501"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["T20"]
+
+[tool.mypy]
+python_version = "3.11"
+warn_return_any = true
+warn_unused_configs = true
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+addopts = "-q"
