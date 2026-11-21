@@ -111,7 +111,7 @@ class PiiRedactor:
             return text, False
 
         parent = f"projects/{self.gcp_project_id}/locations/global"
-        inspect_config = {
+        inspect_config: dict[str, Any] = {
             "info_types": [{"name": info_type} for info_type in _CLOUD_DLP_INFO_TYPES],
             "custom_info_types": [
                 {
@@ -120,7 +120,7 @@ class PiiRedactor:
                 }
             ],
         }
-        deidentify_config = {
+        deidentify_config: dict[str, Any] = {
             "info_type_transformations": {
                 "transformations": [
                     {

@@ -27,7 +27,7 @@ from google.adk.agents import Agent, BaseAgent, LoopAgent, ParallelAgent, Sequen
 from google.adk.agents.callback_context import CallbackContext
 from google.adk.agents.context_cache_config import ContextCacheConfig
 from google.adk.agents.invocation_context import InvocationContext
-from google.adk.apps import App, EventsCompactionConfig
+from google.adk.apps.app import App, EventsCompactionConfig
 from google.adk.apps.llm_event_summarizer import LlmEventSummarizer
 from google.adk.events import Event, EventActions
 from google.adk.models import Gemini
@@ -66,8 +66,8 @@ class SelfEvalEscalationChecker(BaseAgent):
         if isinstance(raw_verdict, dict):
             passed = bool(raw_verdict.get("passed", False))
             feedback = str(raw_verdict.get("revision_feedback", feedback))
-        elif hasattr(raw_verdict, "passed"):
-            passed = bool(raw_verdict.passed)
+        elif raw_verdict is not None and hasattr(raw_verdict, "passed"):
+            passed = bool(getattr(raw_verdict, "passed", False))
             feedback = str(getattr(raw_verdict, "revision_feedback", feedback))
 
         ctx.session.state["self_eval_feedback"] = feedback
@@ -246,10 +246,11 @@ def build_copilot_app(
     )
 
     compaction_model = cfg.model_router.select_model(TaskTier.HISTORY_COMPACTION)
-    compaction_config = EventsCompactionConfig(
+    compaction_config = EventsCompactionConfig(  # type: ignore[operator]
         compaction_interval=cfg.compaction_interval,
         overlap_size=cfg.compaction_overlap_size,
         token_threshold=cfg.compaction_token_threshold,
+        event_retention_size=cfg.compaction_event_retention_size,
         summarizer=LlmEventSummarizer(llm=Gemini(model=compaction_model)),
     )
 

@@ -11,6 +11,7 @@ across all agents in the `App`:
 
 from __future__ import annotations
 
+import importlib
 import re
 from typing import Any
 
@@ -73,7 +74,7 @@ class PolicyGuardrailPlugin(BasePlugin):
         client = self._model_armor_client
         if client is None:
             try:
-                from google.cloud import modelarmor_v1  # type: ignore[import-untyped]
+                modelarmor_v1 = importlib.import_module("google.cloud.modelarmor_v1")
 
                 client = modelarmor_v1.ModelArmorClient()
                 self._model_armor_client = client
@@ -179,7 +180,7 @@ class PolicyGuardrailPlugin(BasePlugin):
                     continue
             new_parts.append(part)
 
-        if modified:
+        if modified and content is not None:
             content.parts = new_parts
             return llm_response
         return None
