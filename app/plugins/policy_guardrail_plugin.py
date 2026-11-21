@@ -32,7 +32,7 @@ _PROMPT_INJECTION_PATTERNS: tuple[re.Pattern[str], ...] = (
 )
 
 _DISALLOWED_TOOL_PATTERNS: tuple[re.Pattern[str], ...] = (
-    re.compile(r"(?:^|/)(?:admin|modmail|private_messages)(?:$|/)", re.IGNORECASE),
+    re.compile(r"\b(?:admin|modmail|private_messages)\b", re.IGNORECASE),
     re.compile(r"(?:drop\s+table|;\s*delete\s+from)", re.IGNORECASE),
 )
 
